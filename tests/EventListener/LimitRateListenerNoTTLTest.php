@@ -17,7 +17,8 @@ class LimitRateListenerNoTTLTest extends BaseLimitRateListenerTest
     public function setUp(): void
     {
         $this->limitRateListener = new LimitRateListener(
-            $this->storage = $this->createMock(NoTTLRateLimitStorageInterface::class)
+            $this->storage = $this->createMock(NoTTLRateLimitStorageInterface::class),
+            false
         );
     }
 

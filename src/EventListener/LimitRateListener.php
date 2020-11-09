@@ -15,10 +15,12 @@ use Symfony\Component\HttpKernel\Event\ControllerArgumentsEvent;
 class LimitRateListener implements EventSubscriberInterface
 {
     private RateLimitStorageInterface $storage;
+    private bool $displayHeaders;
 
-    public function __construct(RateLimitStorageInterface $storage)
+    public function __construct(RateLimitStorageInterface $storage, bool $displayHeaders)
     {
         $this->storage = $storage;
+        $this->displayHeaders = $displayHeaders;
     }
 
     public function onKernelController(ControllerArgumentsEvent $event): void
@@ -51,10 +53,11 @@ class LimitRateListener implements EventSubscriberInterface
         }
 
         if (null !== $storedRateLimit && $storedRateLimit->getHits() >= $rateLimit->getLimit()) {
+            $displayHeaders = $this->displayHeaders;
             $event->setController(
-                static function () use ($storedRateLimit) {
+                static function () use ($displayHeaders, $storedRateLimit) {
                     return new JsonResponse(
-                        $storedRateLimit->getLimitReachedOutput(),
+                        $displayHeaders ? $storedRateLimit->getLimitReachedOutput() : Response::$statusTexts[Response::HTTP_TOO_MANY_REQUESTS],
                         Response::HTTP_TOO_MANY_REQUESTS
                     );
                 }

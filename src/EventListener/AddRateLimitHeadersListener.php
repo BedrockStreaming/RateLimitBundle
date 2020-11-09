@@ -11,8 +11,19 @@ use Symfony\Component\HttpKernel\HttpKernelInterface;
 
 class AddRateLimitHeadersListener implements EventSubscriberInterface
 {
+    private bool $displayHeaders;
+
+    public function __construct(bool $displayHeaders)
+    {
+        $this->displayHeaders = $displayHeaders;
+    }
+
     public function onKernelResponse(ResponseEvent $event): void
     {
+        if (!$this->displayHeaders) {
+            return;
+        }
+
         if ($event->getRequestType() !== HttpKernelInterface::MASTER_REQUEST) {
             return;
         }

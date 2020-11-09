@@ -30,6 +30,7 @@ class BedrockRateLimitExtension extends Extension
         $container->setParameter('bedrock_rate_limit.limit', $config['limit']);
         $container->setParameter('bedrock_rate_limit.period', $config['period']);
         $container->setParameter('bedrock_rate_limit.limit_by_route', $config['limit_by_route']);
+        $container->setParameter('bedrock_rate_limit.display_headers', $config['display_headers']);
 
         $loader = new YamlFileLoader(
             $container,

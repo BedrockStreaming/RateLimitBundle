@@ -12,3 +12,11 @@ services:
       $period: '%bedrock_rate_limit.period%'
       $limitByRoute: '%bedrock_rate_limit.limit_by_route%'
       $rateLimitModifiers: !tagged rate_limit.modifiers
+
+  Bedrock\Bundle\RateLimitBundle\EventListener\LimitRateListener:
+    arguments:
+      $displayHeaders: '%bedrock_rate_limit.display_headers%'
+
+  Bedrock\Bundle\RateLimitBundle\EventListener\AddRateLimitHeadersListener:
+    arguments:
+      $displayHeaders: '%bedrock_rate_limit.display_headers%'

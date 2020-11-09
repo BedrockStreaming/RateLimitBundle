@@ -29,6 +29,9 @@ class Configuration implements ConfigurationInterface
                     ->defaultValue(60)
                     ->min(0)
                 ->end()
+                ->booleanNode('display_headers')
+                    ->defaultValue(false)
+                ->end()
             ->end()
         ;
 
