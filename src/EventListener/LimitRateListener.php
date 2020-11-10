@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Bedrock\Bundle\RateLimitBundle\EventListener;
 
 use Bedrock\Bundle\RateLimitBundle\Model\RateLimit;
-use Bedrock\Bundle\RateLimitBundle\Storage\NoTTLRateLimitStorageInterface;
+use Bedrock\Bundle\RateLimitBundle\Storage\ManuallyResetableRateLimitStorageInterface;
 use Bedrock\Bundle\RateLimitBundle\Storage\RateLimitStorageInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -45,7 +45,7 @@ class LimitRateListener implements EventSubscriberInterface
 
         if (null !== $storedRateLimit
             && $storedRateLimit->isOutdated()) {
-            if ($this->storage instanceof NoTTLRateLimitStorageInterface) {
+            if ($this->storage instanceof ManuallyResetableRateLimitStorageInterface) {
                 $this->storage->resetRateLimit($rateLimit);
             }
 

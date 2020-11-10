@@ -4,7 +4,7 @@ namespace Bedrock\Bundle\RateLimitBundle\Storage;
 
 use Bedrock\Bundle\RateLimitBundle\Model\RateLimit;
 
-interface NoTTLRateLimitStorageInterface extends RateLimitStorageInterface
+interface ManuallyResetableRateLimitStorageInterface extends RateLimitStorageInterface
 {
     /**
      * Deletes stored rate limit

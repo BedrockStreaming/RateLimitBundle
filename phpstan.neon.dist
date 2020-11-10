@@ -10,4 +10,3 @@ parameters:
     checkGenericClassInNonGenericObjectType: false
     ignoreErrors:
         - '#Cannot call method integerNode\(\) on Symfony\\Component\\Config\\Definition\\Builder\\NodeParentInterface\|null\.#'
-        - '#Parameter \#1 \$argument of class ReflectionClass constructor expects class-string\<object\>\|object\, object\|string\|null given\.#'

@@ -64,9 +64,6 @@ class ReadRateLimitAnnotationListenerTest extends TestCase
     public function testItSetRateLimitIfNoAnnotationProvidedAndServiceAliasIsUsed(): void
     {
         $this->createReadRateLimitAnnotationListerner();
-        $this->container->expects($this->once())
-            ->method('has')
-            ->willReturn(true);
 
         $this->container->expects($this->once())
             ->method('get')

@@ -7,7 +7,7 @@ namespace Bedrock\Bundle\RateLimitBundle\Storage;
 use Bedrock\Bundle\RateLimitBundle\Model\RateLimit;
 use Bedrock\Bundle\RateLimitBundle\Model\StoredRateLimit;
 
-class RateLimitInMemoryStorage implements NoTTLRateLimitStorageInterface
+class RateLimitInMemoryStorage implements ManuallyResetableRateLimitStorageInterface
 {
     /** @var array<string, StoredRateLimit> */
     private static $storedRateLimits = [];

@@ -6,18 +6,18 @@ namespace Bedrock\Bundle\RateLimitBundle\Tests\EventListener;
 
 use Bedrock\Bundle\RateLimitBundle\EventListener\LimitRateListener;
 use Bedrock\Bundle\RateLimitBundle\Model\StoredRateLimit;
-use Bedrock\Bundle\RateLimitBundle\Storage\NoTTLRateLimitStorageInterface;
+use Bedrock\Bundle\RateLimitBundle\Storage\ManuallyResetableRateLimitStorageInterface;
 
-class LimitRateListenerNoTTLTest extends BaseLimitRateListenerTest
+class LimitRateListenerWithManuallyResetableRateLimitStorageInterfaceTest extends BaseLimitRateListenerTest
 {
     private LimitRateListener $limitRateListener;
-    /** @var NoTTLRateLimitStorageInterface|\PHPUnit\Framework\MockObject\MockObject */
+    /** @var ManuallyResetableRateLimitStorageInterface|\PHPUnit\Framework\MockObject\MockObject */
     private $storage;
 
     public function setUp(): void
     {
         $this->limitRateListener = new LimitRateListener(
-            $this->storage = $this->createMock(NoTTLRateLimitStorageInterface::class),
+            $this->storage = $this->createMock(ManuallyResetableRateLimitStorageInterface::class),
             false
         );
     }

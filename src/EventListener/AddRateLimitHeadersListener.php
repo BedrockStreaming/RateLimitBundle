@@ -7,7 +7,6 @@ namespace Bedrock\Bundle\RateLimitBundle\EventListener;
 use Bedrock\Bundle\RateLimitBundle\Model\StoredRateLimit;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\ResponseEvent;
-use Symfony\Component\HttpKernel\HttpKernelInterface;
 
 class AddRateLimitHeadersListener implements EventSubscriberInterface
 {
@@ -24,7 +23,7 @@ class AddRateLimitHeadersListener implements EventSubscriberInterface
             return;
         }
 
-        if ($event->getRequestType() !== HttpKernelInterface::MASTER_REQUEST) {
+        if (!$event->isMasterRequest()) {
             return;
         }
 
