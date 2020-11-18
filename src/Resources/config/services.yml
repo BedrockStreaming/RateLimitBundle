@@ -1,0 +1,22 @@
+services:
+  _defaults:
+    autowire: true
+    autoconfigure: true
+
+  Bedrock\Bundle\RateLimitBundle\:
+    resource: '../../../src/*'
+
+  Bedrock\Bundle\RateLimitBundle\EventListener\ReadRateLimitAnnotationListener:
+    arguments:
+      $limit: '%bedrock_rate_limit.limit%'
+      $period: '%bedrock_rate_limit.period%'
+      $limitByRoute: '%bedrock_rate_limit.limit_by_route%'
+      $rateLimitModifiers: !tagged rate_limit.modifiers
+
+  Bedrock\Bundle\RateLimitBundle\EventListener\LimitRateListener:
+    arguments:
+      $displayHeaders: '%bedrock_rate_limit.display_headers%'
+
+  Bedrock\Bundle\RateLimitBundle\EventListener\AddRateLimitHeadersListener:
+    arguments:
+      $displayHeaders: '%bedrock_rate_limit.display_headers%'
