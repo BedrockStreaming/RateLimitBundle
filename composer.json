@@ -1,5 +1,6 @@
 {
-    "name": "bedrock/rate-limit-bundle",
+    "name": "bedrockstreaming/rate-limit-bundle",
+    "description": "Manage rate limitation for your routes",
     "type": "symfony-bundle",
     "license": "MIT",
     "authors": [
