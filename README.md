@@ -3,7 +3,7 @@ This bundle provides an easy way to protect your project by limiting access to y
 
 ## Install the bundle
 ```bash
-composer require bedrock/rate-limit-bundle
+composer require bedrockstreaming/rate-limit-bundle
 ```
 
 Update your _config/bundles.php_ file to add the bundle for all env
