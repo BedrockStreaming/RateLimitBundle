@@ -49,17 +49,16 @@ class ReadRateLimitAnnotationListener implements EventSubscriberInterface
         if (null === $controllerAttribute || !is_string($controllerAttribute)) {
             return;
         }
-        $controllerAttributeParts = explode('::', $controllerAttribute);
+        // services alias can be used with 'service.alias:functionName' or 'service.alias::functionName'
+        $controllerAttributeParts = explode(':', str_replace('::', ':', $controllerAttribute));
         $controllerName = $controllerAttributeParts[0] ?? '';
         $methodName = $controllerAttributeParts[1] ?? null;
 
         if (!class_exists($controllerName)) {
             // If controller attribute is an alias instead of a class name
-            $serviceIdAttributeParts = explode(':', $controllerName);
-            if (null === ($controllerName = $this->container->get($serviceIdAttributeParts[0]))) {
+            if (null === ($controllerName = $this->container->get($controllerAttributeParts[0]))) {
                 throw new \InvalidArgumentException('Parameter _controller from request : "'.$controllerAttribute.'" do not contains a valid class name');
             }
-            $methodName = $serviceIdAttributeParts[1] ?? null;
         }
         $reflection = new \ReflectionClass($controllerName);
         $annotation = $this->annotationReader->getMethodAnnotation($reflection->getMethod((string) ($methodName ?? '__invoke')), RateLimitAnnotation::class);

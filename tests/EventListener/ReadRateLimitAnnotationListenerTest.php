@@ -61,7 +61,10 @@ class ReadRateLimitAnnotationListenerTest extends TestCase
         $this->assertFalse($event->getRequest()->attributes->has('_rate_limit'));
     }
 
-    public function testItSetRateLimitIfNoAnnotationProvidedAndServiceAliasIsUsed(): void
+    /**
+     * @dataProvider servicesAliasDataProvider
+     */
+    public function testItSetRateLimitIfNoAnnotationProvidedAndServiceAliasIsUsed(string $serviceAlias): void
     {
         $this->createReadRateLimitAnnotationListerner();
 
@@ -69,7 +72,7 @@ class ReadRateLimitAnnotationListenerTest extends TestCase
             ->method('get')
             ->willReturn(new FakeInvokableClassWithDefaultRateLimit());
 
-        $event = $this->createEvent(null, true);
+        $event = $this->createEvent(null, $serviceAlias);
 
         $this->annotationReader->expects($this->once())->method('getMethodAnnotation')->willReturn(null);
 
@@ -78,6 +81,19 @@ class ReadRateLimitAnnotationListenerTest extends TestCase
 
         $this->readRateLimitAnnotationListener->onKernelController($event);
         $this->assertFalse($event->getRequest()->attributes->has('_rate_limit'));
+    }
+
+    /**
+     * @return \Generator<array<string>>
+     */
+    public function servicesAliasDataProvider(): \Generator
+    {
+        yield 'service alias with :' => [
+            'fake.invokable.class:__invoke',
+        ];
+        yield 'service alias with ::' => [
+            'fake.invokable.class::__invoke',
+        ];
     }
 
     public function testItSetsRateLimitIfAnnotationProvidedWithDefaultValue(): void
@@ -159,15 +175,15 @@ class ReadRateLimitAnnotationListenerTest extends TestCase
         ];
     }
 
-    protected function createEvent(Request $request = null, bool $useAlias = false): ControllerEvent
+    protected function createEvent(Request $request = null, string $serviceId = null): ControllerEvent
     {
         $request = $request ?? new Request();
-        $request->attributes->set('_controller', $useAlias ? 'fake.invokable.class:__invoke' : FakeInvokableClassWithDefaultRateLimit::class);
+        $request->attributes->set('_controller', $serviceId ?? FakeInvokableClassWithDefaultRateLimit::class);
 
         return new ControllerEvent(
             $this->createMock(HttpKernelInterface::class),
             new FakeInvokableClassWithDefaultRateLimit(),
-            $request ?? new Request(),
+            $request,
             HttpKernelInterface::MASTER_REQUEST
         );
     }
