@@ -30,6 +30,9 @@ By default, the limitation is common to all routes annotated `@RateLimit()`.
 For example, if you keep the default configuration and you configure the `@RateLimit()` annotation in 2 routes. Limit will shared between this 2 routes, if user consume all authorized calls on the first route, the second route couldn't be called.
 If you swicth `limit_by_route` to true, users will be allowed to reach the limit on each route annotated.
 
+`@GraphQLRateLimit()`annotation allows you to rate limit by graphQL query or mutation.
+/!\ To use this annotation, you will need to install suggested package.
+
 If you switch `display_headers` to true, 3 headers will be added `x-rate-limit`, `x-rate-limit-hits`, `x-rate-limit-untils` to your responses. This can be usefull to debug your limitations.
 `display_headers` is used to display a verbose return if limit is reached.
  
@@ -81,6 +84,20 @@ This annotation accepts parameters to customize the rate limit. The following ex
 * @RateLimit(
 *     limit=10,
 *     period=120
+* )
+*/
+```
+
+To rate limit your graphQL API, add the `@GraphQLRateLimit()` annotation to your graphQL controller.
+This annotation requires a list of endpoints and accepts parameters to customize the rate limit. The following example shows how to limit requests on an endpoint at the rate of 10 requests max every 2 minutes and on default limitations.
+
+```php
+/**
+* @GraphQLRateLimit(
+*     endpoints={
+*        {"endpoint"="GetMyQuery", "limit"=10, "period"=120},
+*        {"endpoint"="EditMyMutation"},
+*     }
 * )
 */
 ```

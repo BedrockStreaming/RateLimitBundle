@@ -42,15 +42,20 @@ ${SOURCE_DIR}/vendor/composer/installed.json:
 
 .PHONY: phpunit
 phpunit:
+	$(COMPOSER) require webonyx/graphql-php
 	$(call printSection,TEST phpunit)
-	${BIN_DIR}/phpunit
+	${BIN_DIR}/phpunit --exclude withoutGraphQLPackage
+	$(COMPOSER) remove webonyx/graphql-php
+	${BIN_DIR}/phpunit --group withoutGraphQLPackage
 
 ### QUALITY ###
 
 .PHONY: phpstan
 phpstan:
+	$(COMPOSER) require webonyx/graphql-php
 	$(call printSection,QUALITY phpstan)
 	${BIN_DIR}/phpstan analyse --memory-limit=1G
+	$(COMPOSER) remove webonyx/graphql-php
 
 .PHONY: cs-ci
 cs-ci:

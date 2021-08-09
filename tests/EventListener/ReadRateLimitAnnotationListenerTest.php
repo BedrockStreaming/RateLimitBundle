@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Bedrock\Bundle\RateLimitBundle\Tests\EventListener;
 
+use Bedrock\Bundle\RateLimitBundle\Annotation\GraphQLRateLimit;
+use Bedrock\Bundle\RateLimitBundle\Annotation\GraphQLRateLimit as GraphQLRateLimitAnnotation;
 use Bedrock\Bundle\RateLimitBundle\Annotation\RateLimit as RateLimitAnnotation;
 use Bedrock\Bundle\RateLimitBundle\EventListener\ReadRateLimitAnnotationListener;
 use Bedrock\Bundle\RateLimitBundle\Model\RateLimit;
@@ -52,10 +54,30 @@ class ReadRateLimitAnnotationListenerTest extends TestCase
         $this->container->expects($this->never())
             ->method('has');
 
-        $this->annotationReader->expects($this->once())->method('getMethodAnnotation')->willReturn(null);
+        $this->annotationReader->expects($this->exactly(2))->method('getMethodAnnotation')->willReturn(null);
 
         $this->rateLimitModifiers[0]->expects($this->never())->method('support');
         $this->rateLimitModifiers[1]->expects($this->never())->method('support');
+
+        $this->readRateLimitAnnotationListener->onKernelController($event);
+        $this->assertFalse($event->getRequest()->attributes->has('_rate_limit'));
+    }
+
+    public function testIttDoesNotSetRateLimitIfGraphQLAnnotationAndEndpointNotConfigured(): void
+    {
+        $this->createReadRateLimitAnnotationListerner();
+        $request = $this->createMock(Request::class);
+        $request->attributes = new ParameterBag();
+        $request->request = new ParameterBag();
+        $event = $this->createEventWithGraphQLAnnotation($request, false);
+
+        $this->container->expects($this->never())
+            ->method('has');
+
+        $this->annotationReader->expects($this->once())->method('getMethodAnnotation')->willReturn(new GraphQLRateLimitAnnotation(['endpoints' => [['endpoint' => 'GetAnotherObject']]]));
+
+        $this->rateLimitModifiers[0]->expects($this->never())->method('support')->willReturn(true);
+        $this->rateLimitModifiers[1]->expects($this->never())->method('support')->willReturn(false);
 
         $this->readRateLimitAnnotationListener->onKernelController($event);
         $this->assertFalse($event->getRequest()->attributes->has('_rate_limit'));
@@ -74,7 +96,7 @@ class ReadRateLimitAnnotationListenerTest extends TestCase
 
         $event = $this->createEvent(null, $serviceAlias);
 
-        $this->annotationReader->expects($this->once())->method('getMethodAnnotation')->willReturn(null);
+        $this->annotationReader->expects($this->exactly(2))->method('getMethodAnnotation')->willReturn(null);
 
         $this->rateLimitModifiers[0]->expects($this->never())->method('support');
         $this->rateLimitModifiers[1]->expects($this->never())->method('support');
@@ -110,6 +132,36 @@ class ReadRateLimitAnnotationListenerTest extends TestCase
 
         $this->rateLimitModifiers[0]->expects($this->once())->method('support')->willReturn(true);
         $rateLimit = new RateLimit($this->limitDefaultValue, $this->periodDefaultValue);
+        $this->rateLimitModifiers[0]->expects($this->once())->method('modifyRateLimit')->with($request, $rateLimit);
+
+        $this->rateLimitModifiers[1]->expects($this->once())->method('support')->willReturn(false);
+        $this->rateLimitModifiers[1]->expects($this->never())->method('modifyRateLimit');
+
+        $this->readRateLimitAnnotationListener->onKernelController($event);
+        $this->assertTrue($event->getRequest()->attributes->has('_rate_limit'));
+
+        $this->assertEquals(
+            $rateLimit,
+            $event->getRequest()->attributes->get('_rate_limit')
+        );
+    }
+
+    public function testItSetsGraphQLRateLimitIfAnnotationProvidedWithDefaultValue(): void
+    {
+        $this->createReadRateLimitAnnotationListerner();
+        $request = $this->createMock(Request::class);
+        $request->attributes = new ParameterBag();
+        $request->request = new ParameterBag();
+        $event = $this->createEventWithGraphQLAnnotation($request, false);
+
+        $this->container->expects($this->never())
+            ->method('has');
+
+        $this->annotationReader->expects($this->once())->method('getMethodAnnotation')->willReturn(new GraphQLRateLimitAnnotation(['endpoints' => [['endpoint' => 'GetObject']]]));
+
+        $this->rateLimitModifiers[0]->expects($this->once())->method('support')->willReturn(true);
+        $rateLimit = new RateLimit($this->limitDefaultValue, $this->periodDefaultValue);
+        $rateLimit->varyHashOn('_graphql_endpoint', 'GetObject');
         $this->rateLimitModifiers[0]->expects($this->once())->method('modifyRateLimit')->with($request, $rateLimit);
 
         $this->rateLimitModifiers[1]->expects($this->once())->method('support')->willReturn(false);
@@ -161,6 +213,53 @@ class ReadRateLimitAnnotationListenerTest extends TestCase
         );
     }
 
+    public function testItSetsGraphQLRateLimitIfAnnotationProvidedWithCustomValue(): void
+    {
+        $this->createReadRateLimitAnnotationListerner();
+        $request = $this->createMock(Request::class);
+        $request->attributes = new ParameterBag();
+        $request->request = new ParameterBag();
+        $event = $this->createEventWithGraphQLAnnotation($request, true);
+
+        $this->container->expects($this->never())
+            ->method('has');
+
+        $this->annotationReader->expects($this->once())->method('getMethodAnnotation')->willReturn(new GraphQLRateLimitAnnotation(['endpoints' => [['endpoint' => 'GetObject', 'limit' => 10, 'period' => 5]]]));
+
+        $this->rateLimitModifiers[0]->expects($this->once())->method('support')->willReturn(true);
+        $rateLimit = new RateLimit(10, 5);
+        $rateLimit->varyHashOn('_graphql_endpoint', 'GetObject');
+        $this->rateLimitModifiers[0]->expects($this->once())->method('modifyRateLimit')->with($request, $rateLimit);
+
+        $this->rateLimitModifiers[1]->expects($this->once())->method('support')->willReturn(false);
+        $this->rateLimitModifiers[1]->expects($this->never())->method('modifyRateLimit');
+
+        $this->readRateLimitAnnotationListener->onKernelController($event);
+        $this->assertTrue($event->getRequest()->attributes->has('_rate_limit'));
+
+        $this->assertEquals(
+            $rateLimit,
+            $event->getRequest()->attributes->get('_rate_limit')
+        );
+    }
+
+    /**
+     * @group withoutGraphQLPackage
+     */
+    public function testItSetsGraphQLRateLimitIfPackageNotInstalled(): void
+    {
+        $this->createReadRateLimitAnnotationListerner();
+        $request = $this->createMock(Request::class);
+        $request->attributes = new ParameterBag();
+        $request->request = new ParameterBag();
+        $event = $this->createEventWithGraphQLAnnotation($request, false);
+
+        $this->annotationReader->expects($this->once())->method('getMethodAnnotation')->willReturn(new GraphQLRateLimitAnnotation(['endpoints' => [['endpoint' => 'GetObject']]]));
+
+        $this->expectExceptionMessage('Run "composer require webonyx/graphql-php" to use @GraphQLRateLimit annotation.');
+        $this->readRateLimitAnnotationListener->onKernelController($event);
+    }
+
     /**
      * @return \Generator<array<bool>>
      */
@@ -199,6 +298,28 @@ class ReadRateLimitAnnotationListenerTest extends TestCase
             HttpKernelInterface::MASTER_REQUEST
         );
     }
+
+    public function createEventWithGraphQLAnnotation(Request $request, bool $custom): ControllerEvent
+    {
+        $request->attributes->set('_controller', $custom ? FakeInvokableClassWithCustomGraphQLRateLimit::class : FakeInvokableClassWithDefaultGraphQLRateLimit::class);
+
+        $body = <<<'GRAPHQL'
+query ($id: String!) {
+  GetObject(id: $id) {
+    id
+  }
+}
+GRAPHQL;
+
+        $request->request->set('query', $body);
+
+        return new ControllerEvent(
+            $this->createMock(HttpKernelInterface::class),
+            [new FakeClassWithRateLimit(), 'action'],
+            $request,
+            HttpKernelInterface::MASTER_REQUEST
+        );
+    }
 }
 
 class FakeInvokableClassWithDefaultRateLimit
@@ -214,12 +335,42 @@ class FakeInvokableClassWithDefaultRateLimit
 class FakeClassWithRateLimit
 {
     /**
-     * @RateLimite(
+     * @RateLimit(
      *     limit=10,
      *     period=5
      * )
      */
     public function action(): void
+    {
+    }
+}
+
+class FakeInvokableClassWithDefaultGraphQLRateLimit
+{
+    /**
+     * @GraphQLRateLimit(
+     *     {
+     *         'endpoints' = {
+     *             {'endpoint' = 'GetObject'}
+     *     }
+     * )
+     */
+    public function __invoke(): void
+    {
+    }
+}
+
+class FakeInvokableClassWithCustomGraphQLRateLimit
+{
+    /**
+     * @GraphQLRateLimit(
+     *     {
+     *     'endpoints' = {
+     *        { 'endpoint' = 'GetObject', 'limit' = 10, 'period' = 5}
+     *     }
+     * )
+     */
+    public function __invoke(): void
     {
     }
 }
