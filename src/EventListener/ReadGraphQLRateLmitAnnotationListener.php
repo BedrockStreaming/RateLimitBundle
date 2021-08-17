@@ -1,31 +1,31 @@
 <?php
 
-declare(strict_types=1);
-
 namespace Bedrock\Bundle\RateLimitBundle\EventListener;
 
-use Bedrock\Bundle\RateLimitBundle\Annotation\RateLimit as RateLimitAnnotation;
+use Bedrock\Bundle\RateLimitBundle\Annotation\GraphQLRateLimit as GraphQLRateLimitAnnotation;
 use Bedrock\Bundle\RateLimitBundle\Model\RateLimit;
 use Bedrock\Bundle\RateLimitBundle\RateLimitModifier\RateLimitModifierInterface;
 use Doctrine\Common\Annotations\Reader;
+use GraphQL\Language\AST\OperationDefinitionNode;
+use GraphQL\Language\Parser;
+use GraphQL\Language\Source;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\ControllerEvent;
 
-class ReadRateLimitAnnotationListener implements EventSubscriberInterface
+class ReadGraphQLRateLmitAnnotationListener implements EventSubscriberInterface
 {
     private Reader $annotationReader;
     /** @var iterable<RateLimitModifierInterface> */
     private $rateLimitModifiers;
     private int $limit;
     private int $period;
-    private bool $limitByRoute;
     private ContainerInterface $container;
 
     /**
      * @param RateLimitModifierInterface[] $rateLimitModifiers
      */
-    public function __construct(ContainerInterface $container, Reader $annotationReader, iterable $rateLimitModifiers, int $limit, int $period, bool $limitByRoute)
+    public function __construct(ContainerInterface $container, Reader $annotationReader, iterable $rateLimitModifiers, int $limit, int $period)
     {
         foreach ($rateLimitModifiers as $rateLimitModifier) {
             if (!($rateLimitModifier instanceof RateLimitModifierInterface)) {
@@ -37,7 +37,6 @@ class ReadRateLimitAnnotationListener implements EventSubscriberInterface
         $this->rateLimitModifiers = $rateLimitModifiers;
         $this->limit = $limit;
         $this->period = $period;
-        $this->limitByRoute = $limitByRoute;
         $this->container = $container;
     }
 
@@ -61,24 +60,31 @@ class ReadRateLimitAnnotationListener implements EventSubscriberInterface
             }
         }
         $reflection = new \ReflectionClass($controllerName);
-        $annotation = $this->annotationReader->getMethodAnnotation($reflection->getMethod((string) ($methodName ?? '__invoke')), RateLimitAnnotation::class);
+        $annotation = $this->annotationReader->getMethodAnnotation($reflection->getMethod((string) ($methodName ?? '__invoke')), GraphQLRateLimitAnnotation::class);
 
-        if (!$annotation instanceof RateLimitAnnotation) {
+        if (!$annotation instanceof GraphQLRateLimitAnnotation) {
             return;
         }
 
-        $rateLimit = new RateLimit(
-            $this->limit,
-            $this->period
-        );
+        if (!class_exists('GraphQL\Language\Parser')) {
+            throw new \Exception('Run "composer require webonyx/graphql-php" to use @GraphQLRateLimit annotation.');
+        }
 
-        if ($this->limitByRoute) {
-            $rateLimit = new RateLimit(
-                $annotation->getLimit() ?? $this->limit,
-                $annotation->getPeriod() ?? $this->period
-            );
+        $endpoint = $this->extractQueryName($request->request->get('query'));
 
-            $rateLimit->varyHashOn('_route', $request->attributes->get('_route'));
+        foreach ($annotation->getEndpointConfigurations() as $graphQLEndpointConfiguration) {
+            if ($endpoint === $graphQLEndpointConfiguration->getEndpoint()) {
+                $rateLimit = new RateLimit(
+                    $graphQLEndpointConfiguration->getLimit() ?? $this->limit,
+                    $graphQLEndpointConfiguration->getPeriod() ?? $this->period
+                );
+                $rateLimit->varyHashOn('_graphql_endpoint', $endpoint);
+                break;
+            }
+        }
+
+        if (!isset($rateLimit)) {
+            return;
         }
 
         foreach ($this->rateLimitModifiers as $hashKeyVarier) {
@@ -97,5 +103,20 @@ class ReadRateLimitAnnotationListener implements EventSubscriberInterface
         return [
             ControllerEvent::class => 'onKernelController',
         ];
+    }
+
+    /**
+     * @param Source|string $query
+     */
+    public function extractQueryName($query): string
+    {
+        $parsedQuery = Parser::parse($query);
+        /** @var OperationDefinitionNode $item */
+        foreach ($parsedQuery->definitions->getIterator() as $item) {
+            /* @phpstan-ignore-next-line */
+            return (string) $item->selectionSet->selections[0]->name->value;
+        }
+
+        throw new QueryExtractionException('Unable to extract query');
     }
 }
