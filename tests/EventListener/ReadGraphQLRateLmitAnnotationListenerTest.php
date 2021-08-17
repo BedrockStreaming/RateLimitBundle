@@ -11,6 +11,7 @@ use Doctrine\Common\Annotations\AnnotationReader;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\InputBag;
 use Symfony\Component\HttpFoundation\ParameterBag;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Event\ControllerEvent;
@@ -64,7 +65,7 @@ class ReadGraphQLRateLmitAnnotationListenerTest extends TestCase
         $this->createGraphQLReadRateLimitAnnotationListener();
         $request = $this->createMock(Request::class);
         $request->attributes = new ParameterBag();
-        $request->request = new ParameterBag();
+        $request->request = new InputBag();
         $event = $this->createEventWithGraphQLAnnotation($request, false);
 
         $this->container->expects($this->never())
@@ -94,7 +95,7 @@ class ReadGraphQLRateLmitAnnotationListenerTest extends TestCase
         $this->createGraphQLReadRateLimitAnnotationListener();
         $request = $this->createMock(Request::class);
         $request->attributes = new ParameterBag();
-        $request->request = new ParameterBag();
+        $request->request = new InputBag();
         $event = $this->createEventWithGraphQLAnnotation($request, true);
 
         $this->container->expects($this->never())
@@ -124,7 +125,7 @@ class ReadGraphQLRateLmitAnnotationListenerTest extends TestCase
         $this->createGraphQLReadRateLimitAnnotationListener();
         $request = $this->createMock(Request::class);
         $request->attributes = new ParameterBag();
-        $request->request = new ParameterBag();
+        $request->request = new InputBag();
         $event = $this->createEventWithGraphQLAnnotation($request, false);
 
         $this->container->expects($this->never())
@@ -147,7 +148,7 @@ class ReadGraphQLRateLmitAnnotationListenerTest extends TestCase
         $this->createGraphQLReadRateLimitAnnotationListener();
         $request = $this->createMock(Request::class);
         $request->attributes = new ParameterBag();
-        $request->request = new ParameterBag();
+        $request->request = new InputBag();
         $event = $this->createEventWithGraphQLAnnotation($request, false);
 
         $this->annotationReader->expects($this->once())->method('getMethodAnnotation')->willReturn(new GraphQLRateLimitAnnotation(['endpoints' => [['endpoint' => 'GetObject']]]));

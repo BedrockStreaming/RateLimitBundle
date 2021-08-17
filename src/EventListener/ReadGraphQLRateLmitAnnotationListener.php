@@ -106,10 +106,11 @@ class ReadGraphQLRateLmitAnnotationListener implements EventSubscriberInterface
     }
 
     /**
-     * @param Source|string $query
+     * @param string|int|float|bool|null $query
      */
     public function extractQueryName($query): string
     {
+        /** @var Source $query */
         $parsedQuery = Parser::parse($query);
         /** @var OperationDefinitionNode $item */
         foreach ($parsedQuery->definitions->getIterator() as $item) {
