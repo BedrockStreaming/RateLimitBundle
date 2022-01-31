@@ -78,7 +78,7 @@ class ReadRateLimitAnnotationListener implements EventSubscriberInterface
                 $annotation->getPeriod() ?? $this->period
             );
 
-            $rateLimit->varyHashOn('_route', $request->attributes->get('_route'));
+            $rateLimit->varyHashOn('_route', strval($request->attributes->get('_route')));
         }
 
         foreach ($this->rateLimitModifiers as $hashKeyVarier) {

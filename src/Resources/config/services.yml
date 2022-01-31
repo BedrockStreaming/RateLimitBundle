@@ -21,8 +21,4 @@ services:
 
   Bedrock\Bundle\RateLimitBundle\EventListener\LimitRateListener:
     arguments:
-      $displayHeaders: '%bedrock_rate_limit.display_headers%'
-
-  Bedrock\Bundle\RateLimitBundle\EventListener\AddRateLimitHeadersListener:
-    arguments:
-      $displayHeaders: '%bedrock_rate_limit.display_headers%'
+      $debug: '%bedrock_rate_limit.debug%'
