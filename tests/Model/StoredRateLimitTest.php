@@ -39,7 +39,7 @@ class StoredRateLimitTest extends TestCase
                 'message' => 'Too many requests. Only 1000 calls allowed every 60 seconds.',
                 'limit' => 1000,
                 'period' => 60,
-                'until' => '2020-06-01T00:00:00+00:00',
+                'until' => '2020-06-01 00:00:00',
                 'vary' => '{"http_method":"GET","customer":"customer-test"}',
             ],
             $storedRateLimit->getLimitReachedOutput()
