@@ -4,11 +4,8 @@ declare(strict_types=1);
 
 namespace Bedrock\Bundle\RateLimitBundle\EventListener;
 
-use Bedrock\Bundle\RateLimitBundle\Annotation\RateLimit as RateLimitAnnotation;
 use Bedrock\Bundle\RateLimitBundle\Model\RateLimit;
 use Bedrock\Bundle\RateLimitBundle\RateLimitModifier\RateLimitModifierInterface;
-use Doctrine\Common\Annotations\Reader;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\ControllerEvent;
 
