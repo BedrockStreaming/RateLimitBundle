@@ -15,10 +15,12 @@ class ReadRateLimitConfigurationListener implements EventSubscriberInterface
     private $rateLimitModifiers;
     private int $limit;
     private int $period;
+    /** @var array<string, array<string, int>> */
     private array $routes;
 
     /**
-     * @param RateLimitModifierInterface[] $rateLimitModifiers
+     * @param RateLimitModifierInterface[]      $rateLimitModifiers
+     * @param array<string, array<string, int>> $routes
      */
     public function __construct(iterable $rateLimitModifiers, int $limit, int $period, array $routes)
     {
@@ -37,7 +39,7 @@ class ReadRateLimitConfigurationListener implements EventSubscriberInterface
     public function onKernelController(ControllerEvent $event): void
     {
         $request = $event->getRequest();
-        $routeName = $request->attributes->get('_route', null);
+        $routeName = strval($request->attributes->get('_route'));
 
         if (!array_key_exists($routeName, $this->routes)) {
             return;
