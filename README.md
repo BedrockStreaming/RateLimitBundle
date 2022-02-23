@@ -24,7 +24,7 @@ bedrock_rate_limit:
     limit: 25 # 1000 requests by default
     period: 600 # 60 seconds by default
     limit_by_route: true|false # false by default
-    display_headers: true|false # false by default
+    debug: true|false # false by default
 ```
 By default, the limitation is common to all routes annotated `@RateLimit()`. 
 For example, if you keep the default configuration and you configure the `@RateLimit()` annotation in 2 routes. Limit will shared between this 2 routes, if user consume all authorized calls on the first route, the second route couldn't be called.
@@ -33,9 +33,15 @@ If you swicth `limit_by_route` to true, users will be allowed to reach the limit
 `@GraphQLRateLimit()`annotation allows you to rate limit by graphQL query or mutation.
 /!\ To use this annotation, you will need to install suggested package.
 
-If you switch `display_headers` to true, 3 headers will be added `x-rate-limit`, `x-rate-limit-hits`, `x-rate-limit-untils` to your responses. This can be usefull to debug your limitations.
-`display_headers` is used to display a verbose return if limit is reached.
- 
+If you switch `debug` to true, a more detailed response will be displayed. This can be usefull to debug your limitations. Do not use this in prod environment.
+
+### How to know if rate limit is reached
+The bundle will add 4 headers to the response :
+* `x-rate-limit` : display how many hits can made until the limit is reached
+* `x-rate-limit-hits` : display how many hits has been done since the beginning of the period 
+* `x-rate-limit-until` : display the date of the end of the limit in ISO 8601 format  
+* `retry-after` : display how many remaining seconds the limit is applied
+
 ### Configure your storage 
 You must tell Symfony which storage implementation you want to use.
 

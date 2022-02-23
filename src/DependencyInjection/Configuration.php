@@ -29,7 +29,7 @@ class Configuration implements ConfigurationInterface
                     ->defaultValue(60)
                     ->min(0)
                 ->end()
-                ->booleanNode('display_headers')
+                ->booleanNode('debug')
                     ->defaultValue(false)
                 ->end()
             ->end()

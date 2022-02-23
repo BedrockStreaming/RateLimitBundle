@@ -10,19 +10,8 @@ use Symfony\Component\HttpKernel\Event\ResponseEvent;
 
 class AddRateLimitHeadersListener implements EventSubscriberInterface
 {
-    private bool $displayHeaders;
-
-    public function __construct(bool $displayHeaders)
-    {
-        $this->displayHeaders = $displayHeaders;
-    }
-
     public function onKernelResponse(ResponseEvent $event): void
     {
-        if (!$this->displayHeaders) {
-            return;
-        }
-
         if (!$event->isMasterRequest()) {
             return;
         }
@@ -32,6 +21,7 @@ class AddRateLimitHeadersListener implements EventSubscriberInterface
             return;
         }
 
+        /** @var StoredRateLimit $storedRateLimit */
         $storedRateLimit = $request->attributes->get('_stored_rate_limit');
 
         if (!$storedRateLimit instanceof StoredRateLimit) {
@@ -41,7 +31,12 @@ class AddRateLimitHeadersListener implements EventSubscriberInterface
         $response = $event->getResponse();
         $response->headers->set('x-rate-limit', (string) $storedRateLimit->getLimit());
         $response->headers->set('x-rate-limit-hits', (string) $storedRateLimit->getHits());
-        $response->headers->set('x-rate-limit-until', $storedRateLimit->getValidUntil()->format('c'));
+        $response->headers->set('x-rate-limit-until', $storedRateLimit
+            ->getValidUntil()
+            ->setTimezone(new \DateTimeZone(date_default_timezone_get()))
+            ->format('c')
+        );
+        $response->headers->set('retry-after', (string) ($storedRateLimit->getValidUntil()->getTimestamp() - time()));
     }
 
     /**

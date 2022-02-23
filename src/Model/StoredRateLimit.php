@@ -63,7 +63,9 @@ class StoredRateLimit
             ),
             'limit' => $this->getLimit(),
             'period' => $this->rateLimit->getPeriod(),
-            'until' => $this->getValidUntil()->format('Y-m-d H:i:s'),
+            'until' => $this->getValidUntil()
+                ->setTimezone(new \DateTimeZone(date_default_timezone_get()))
+                ->format('c'),
             'vary' => $this->rateLimit->getDiscriminator(),
         ];
     }

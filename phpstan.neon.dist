@@ -1,12 +1,13 @@
 includes:
     - 'vendor/phpstan/phpstan-phpunit/extension.neon'
     - 'vendor/phpstan/phpstan-phpunit/rules.neon'
+    - 'vendor/phpstan/phpstan-symfony/extension.neon'
+    - 'vendor/phpstan/phpstan-symfony/rules.neon'
 
 parameters:
     paths:
         - 'src'
         - 'tests'
     level: 'max'
-    checkGenericClassInNonGenericObjectType: false
-    ignoreErrors:
-        - '#Cannot call method integerNode\(\) on Symfony\\Component\\Config\\Definition\\Builder\\NodeParentInterface\|null\.#'
+    checkGenericClassInNonGenericObjectType: true
+    checkMissingIterableValueType:           true

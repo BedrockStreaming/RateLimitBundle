@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Bedrock\Bundle\RateLimitBundle\Tests\EventListener;
 
 use Bedrock\Bundle\RateLimitBundle\EventListener\LimitRateListener;
+use Bedrock\Bundle\RateLimitBundle\Model\RateLimit;
 use Bedrock\Bundle\RateLimitBundle\Model\StoredRateLimit;
 use Bedrock\Bundle\RateLimitBundle\Storage\ManuallyResetableRateLimitStorageInterface;
 
@@ -25,6 +26,7 @@ class LimitRateListenerWithManuallyResetableRateLimitStorageInterfaceTest extend
     public function testItResetsAndStoresNewRateLimitIfCurrentOneIsOutdated(): void
     {
         $event = $this->createEventWithRateLimitInRequest();
+        /** @var RateLimit $rateLimit */
         $rateLimit = $event->getRequest()->attributes->get('_rate_limit');
 
         $this->storage->expects($this->once())

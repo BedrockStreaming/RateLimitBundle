@@ -58,6 +58,7 @@ class LimitRateListenerTest extends BaseLimitRateListenerTest
     public function testItResetsAndStoresNewRateLimitIfCurrentOneIsOutdated(): void
     {
         $event = $this->createEventWithRateLimitInRequest();
+        /** @var RateLimit $rateLimit */
         $rateLimit = $event->getRequest()->attributes->get('_rate_limit');
 
         $this->storage->expects($this->once())
@@ -80,6 +81,7 @@ class LimitRateListenerTest extends BaseLimitRateListenerTest
     public function testItDecreasesLimitIfRateLimitIsValid(): void
     {
         $event = $this->createEventWithRateLimitInRequest();
+        /** @var RateLimit $rateLimit */
         $rateLimit = $event->getRequest()->attributes->get('_rate_limit');
 
         $this->storage->expects($this->once())
@@ -103,6 +105,7 @@ class LimitRateListenerTest extends BaseLimitRateListenerTest
     public function testItSetsABlockingResponseIfLimitIsReached(): void
     {
         $event = $this->createEventWithRateLimitInRequest();
+        /** @var RateLimit $rateLimit */
         $rateLimit = $event->getRequest()->attributes->get('_rate_limit');
 
         $this->storage
@@ -125,7 +128,10 @@ class LimitRateListenerTest extends BaseLimitRateListenerTest
         $response = $newController();
         $this->assertInstanceOf(Response::class, $response);
         $this->assertSame(Response::HTTP_TOO_MANY_REQUESTS, $response->getStatusCode());
-        $this->assertSame('"Too Many Requests"', $response->getContent());
+        /** @var string $content */
+        $content = $response->getContent();
+        $this->assertJson($content);
+        $this->assertJsonStringEqualsJsonString('{"status":429,"code":"too-many-requests","title":"Too Many Requests"}', $content);
 
         $this->assertInstanceOf(StoredRateLimit::class, $event->getRequest()->attributes->get('_stored_rate_limit'));
     }
@@ -133,6 +139,7 @@ class LimitRateListenerTest extends BaseLimitRateListenerTest
     public function testItSetsABlockingResponseIfLimitIsExceeded(): void
     {
         $event = $this->createEventWithRateLimitInRequest();
+        /** @var RateLimit $rateLimit */
         $rateLimit = $event->getRequest()->attributes->get('_rate_limit');
 
         $this->storage->expects($this->once())->method('getStoredRateLimit')->willReturn(
@@ -143,13 +150,16 @@ class LimitRateListenerTest extends BaseLimitRateListenerTest
         /** @var Response $response */
         $response = ($event->getController())();
         $this->assertSame(Response::HTTP_TOO_MANY_REQUESTS, $response->getStatusCode());
-        $this->assertSame('"Too Many Requests"', $response->getContent());
-        $this->assertSame('application/json', $response->headers->get('content-type'));
+        /** @var string $content */
+        $content = $response->getContent();
+        $this->assertJson($content);
+        $this->assertJsonStringEqualsJsonString('{"status":429,"code":"too-many-requests","title":"Too Many Requests"}', $content);
+        $this->assertSame('application/problem+json', $response->headers->get('content-type'));
     }
 
-    public function testTooManyRequestResponseHasCompleteDataIfDisplayHeadersIsEnable(): void
+    public function testTooManyRequestResponseHasCompleteDataIfDebugIsEnable(): void
     {
-        // Override $this->limitRateListener to displayHeaders
+        // Override $this->limitRateListener to debug
         $this->limitRateListener = new LimitRateListener(
             $this->storage = $this->createMock(RateLimitStorageInterface::class),
             true
@@ -171,6 +181,12 @@ class LimitRateListenerTest extends BaseLimitRateListenerTest
         /** @var Response $response */
         $response = ($event->getController())();
         $this->assertSame(Response::HTTP_TOO_MANY_REQUESTS, $response->getStatusCode());
-        $this->assertSame('application/json', $response->headers->get('content-type'));
+        /** @var string $content */
+        $content = $response->getContent();
+        $this->assertJson($content);
+        $contentAsArray = json_decode($content, true);
+        $this->assertIsArray($contentAsArray);
+        $this->assertArrayHasKey('details', $contentAsArray);
+        $this->assertSame('application/problem+json', $response->headers->get('content-type'));
     }
 }

@@ -15,12 +15,12 @@ use Symfony\Component\HttpKernel\Event\ControllerArgumentsEvent;
 class LimitRateListener implements EventSubscriberInterface
 {
     private RateLimitStorageInterface $storage;
-    private bool $displayHeaders;
+    private bool $debug;
 
-    public function __construct(RateLimitStorageInterface $storage, bool $displayHeaders)
+    public function __construct(RateLimitStorageInterface $storage, bool $debug)
     {
         $this->storage = $storage;
-        $this->displayHeaders = $displayHeaders;
+        $this->debug = $debug;
     }
 
     public function onKernelController(ControllerArgumentsEvent $event): void
@@ -53,13 +53,22 @@ class LimitRateListener implements EventSubscriberInterface
         }
 
         if (null !== $storedRateLimit && $storedRateLimit->getHits() >= $rateLimit->getLimit()) {
-            $displayHeaders = $this->displayHeaders;
+            $debug = $this->debug;
             $event->setController(
-                static function () use ($displayHeaders, $storedRateLimit) {
-                    return new JsonResponse(
-                        $displayHeaders ? $storedRateLimit->getLimitReachedOutput() : Response::$statusTexts[Response::HTTP_TOO_MANY_REQUESTS],
-                        Response::HTTP_TOO_MANY_REQUESTS
-                    );
+                static function () use ($debug, $storedRateLimit) {
+                    $response = [
+                        'status' => Response::HTTP_TOO_MANY_REQUESTS,
+                        'code' => 'too-many-requests',
+                        'title' => 'Too Many Requests',
+                    ];
+
+                    if ($debug) {
+                        $response['details'] = $storedRateLimit->getLimitReachedOutput();
+                    }
+
+                    return new JsonResponse($response, Response::HTTP_TOO_MANY_REQUESTS, [
+                        'Content-type' => 'application/problem+json',
+                    ]);
                 }
             );
         }
