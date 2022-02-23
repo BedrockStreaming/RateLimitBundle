@@ -38,7 +38,7 @@ If you switch `debug` to true, a more detailed response will be displayed. This 
 ### How to know if rate limit is reached
 The bundle will add 4 headers to the response :
 * `x-rate-limit` : display how many hits can made until the limit is reached
-* `x-rate-limit-hits` : display how many hits has been done until the beginning of the period 
+* `x-rate-limit-hits` : display how many hits has been done since the beginning of the period 
 * `x-rate-limit-until` : display the date of the end of the limit in ISO 8601 format  
 * `retry-after` : display how many remaining seconds the limit is applied
 
