@@ -32,6 +32,14 @@ class Configuration implements ConfigurationInterface
                 ->booleanNode('display_headers')
                     ->defaultValue(false)
                 ->end()
+                ->arrayNode('routes')
+                    ->arrayPrototype()
+                        ->children()
+                            ->integerNode('limit')->end()
+                            ->integerNode('period')->end()
+                        ->end()
+                    ->end()
+                ->end()
             ->end()
         ;
 

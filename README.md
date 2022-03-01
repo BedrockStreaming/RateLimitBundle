@@ -75,6 +75,9 @@ Update your _config/services.yml_ like this:
 You can also create your own rate limit modifier by implementing `RateLimitModifierInterface` and tagging your service accordingly.
 
 ### Configure your routes
+
+#### With annotations
+
 Add the `@RateLimit()` annotation to your controller methods (by default, the limit will be 1000 requests per minute).
 This annotation accepts parameters to customize the rate limit. The following example shows how to limit requests on a route at the rate of 10 requests max every 2 minutes.
 :warning: This customization only works if the `limit_by_route` parameter is `true`
@@ -100,4 +103,22 @@ This annotation requires a list of endpoints and accepts parameters to customize
 *     }
 * )
 */
+```
+
+#### In YAML
+
+You also may add your rate limits in configuration files (Yaml) with the route name. If `period` or `limit` is not
+defined for a route, the bundle will take the common option.
+
+```yaml
+bedrock_rate_limit:
+    limit: 1000
+    period: 60
+
+    routes:
+        get_foobar:
+            limit: 500
+            period: 10
+        post_foobar:
+            period: 10
 ```

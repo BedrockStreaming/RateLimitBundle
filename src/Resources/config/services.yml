@@ -13,6 +13,13 @@ services:
       $limitByRoute: '%bedrock_rate_limit.limit_by_route%'
       $rateLimitModifiers: !tagged rate_limit.modifiers
 
+  Bedrock\Bundle\RateLimitBundle\EventListener\ReadRateLimitConfigurationListener:
+    arguments:
+      $limit: '%bedrock_rate_limit.limit%'
+      $period: '%bedrock_rate_limit.period%'
+      $rateLimitModifiers: !tagged rate_limit.modifiers
+      $routes: '%bedrock_rate_limit.routes%'
+
   Bedrock\Bundle\RateLimitBundle\EventListener\ReadGraphQLRateLmitAnnotationListener:
     arguments:
       $limit: '%bedrock_rate_limit.limit%'
