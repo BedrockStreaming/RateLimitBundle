@@ -19,10 +19,22 @@ ci: quality test
 install: clean-vendor composer-install
 
 .PHONY: quality
-quality: cs-ci phpstan
+quality: cs-ci phpstan rector
 
 .PHONY: test
 test: phpunit
+
+.PHONY: rector
+## Run rector in dry run mode
+rector:
+	$(call printSection,TEST rector)
+	php ${BIN_DIR}/rector process src --dry-run
+
+.PHONY: rector-fix
+## Run rector
+rector-fix:
+	$(call printSection,TEST rector-fix)
+	php ${BIN_DIR}/rector process src
 
 ### DEPENDENCIES ###
 

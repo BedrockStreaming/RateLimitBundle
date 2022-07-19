@@ -12,17 +12,13 @@ use Symfony\Component\HttpKernel\Event\ControllerEvent;
 class ReadRateLimitConfigurationListener implements EventSubscriberInterface
 {
     /** @var iterable<RateLimitModifierInterface> */
-    private $rateLimitModifiers;
-    private int $limit;
-    private int $period;
-    /** @var array<string, array<string, int>> */
-    private array $routes;
+    private readonly iterable $rateLimitModifiers;
 
     /**
      * @param RateLimitModifierInterface[]      $rateLimitModifiers
      * @param array<string, array<string, int>> $routes
      */
-    public function __construct(iterable $rateLimitModifiers, int $limit, int $period, array $routes)
+    public function __construct(iterable $rateLimitModifiers, private readonly int $limit, private readonly int $period, private readonly array $routes)
     {
         foreach ($rateLimitModifiers as $rateLimitModifier) {
             if (!($rateLimitModifier instanceof RateLimitModifierInterface)) {
@@ -31,9 +27,6 @@ class ReadRateLimitConfigurationListener implements EventSubscriberInterface
         }
 
         $this->rateLimitModifiers = $rateLimitModifiers;
-        $this->limit = $limit;
-        $this->period = $period;
-        $this->routes = $routes;
     }
 
     public function onKernelController(ControllerEvent $event): void

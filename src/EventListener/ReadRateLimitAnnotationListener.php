@@ -14,31 +14,20 @@ use Symfony\Component\HttpKernel\Event\ControllerEvent;
 
 class ReadRateLimitAnnotationListener implements EventSubscriberInterface
 {
-    private Reader $annotationReader;
     /** @var iterable<RateLimitModifierInterface> */
-    private $rateLimitModifiers;
-    private int $limit;
-    private int $period;
-    private bool $limitByRoute;
-    private ContainerInterface $container;
+    private readonly iterable $rateLimitModifiers;
 
     /**
      * @param RateLimitModifierInterface[] $rateLimitModifiers
      */
-    public function __construct(ContainerInterface $container, Reader $annotationReader, iterable $rateLimitModifiers, int $limit, int $period, bool $limitByRoute)
+    public function __construct(private readonly ContainerInterface $container, private readonly Reader $annotationReader, iterable $rateLimitModifiers, private readonly int $limit, private readonly int $period, private readonly bool $limitByRoute)
     {
         foreach ($rateLimitModifiers as $rateLimitModifier) {
             if (!($rateLimitModifier instanceof RateLimitModifierInterface)) {
                 throw new \InvalidArgumentException('$rateLimitModifiers must be instance of '.RateLimitModifierInterface::class);
             }
         }
-
-        $this->annotationReader = $annotationReader;
         $this->rateLimitModifiers = $rateLimitModifiers;
-        $this->limit = $limit;
-        $this->period = $period;
-        $this->limitByRoute = $limitByRoute;
-        $this->container = $container;
     }
 
     public function onKernelController(ControllerEvent $event): void
