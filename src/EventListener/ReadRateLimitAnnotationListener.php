@@ -29,7 +29,7 @@ class ReadRateLimitAnnotationListener implements EventSubscriberInterface
     {
         foreach ($rateLimitModifiers as $rateLimitModifier) {
             if (!($rateLimitModifier instanceof RateLimitModifierInterface)) {
-                throw new \InvalidArgumentException(('$rateLimitModifiers must be instance of '.RateLimitModifierInterface::class));
+                throw new \InvalidArgumentException('$rateLimitModifiers must be instance of '.RateLimitModifierInterface::class);
             }
         }
 
@@ -78,7 +78,9 @@ class ReadRateLimitAnnotationListener implements EventSubscriberInterface
                 $annotation->getPeriod() ?? $this->period
             );
 
-            $rateLimit->varyHashOn('_route', $request->attributes->get('_route'));
+            /** @var string */
+            $route = $request->attributes->get('_route');
+            $rateLimit->varyHashOn('_route', $route);
         }
 
         foreach ($this->rateLimitModifiers as $hashKeyVarier) {

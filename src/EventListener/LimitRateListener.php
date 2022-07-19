@@ -25,7 +25,7 @@ class LimitRateListener implements EventSubscriberInterface
 
     public function onKernelController(ControllerArgumentsEvent $event): void
     {
-        if (!$event->isMasterRequest()) {
+        if (!$event->isMainRequest()) {
             return;
         }
 

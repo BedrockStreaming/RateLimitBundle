@@ -9,7 +9,7 @@ use Symfony\Component\HttpKernel\Bundle\Bundle;
 
 class RateLimitBundle extends Bundle
 {
-    public function getContainerExtension()
+    public function getContainerExtension(): BedrockRateLimitExtension
     {
         return new BedrockRateLimitExtension();
     }
