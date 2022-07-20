@@ -4,7 +4,7 @@ namespace Bedrock\Bundle\RateLimitBundle\Tests\EventListener;
 
 use Bedrock\Bundle\RateLimitBundle\Annotation\GraphQLRateLimit;
 use Bedrock\Bundle\RateLimitBundle\Annotation\GraphQLRateLimit as GraphQLRateLimitAnnotation;
-use Bedrock\Bundle\RateLimitBundle\EventListener\ReadGraphQLRateLmitAnnotationListener;
+use Bedrock\Bundle\RateLimitBundle\EventListener\ReadGraphQLRateLimitAnnotationListener;
 use Bedrock\Bundle\RateLimitBundle\Model\RateLimit;
 use Bedrock\Bundle\RateLimitBundle\RateLimitModifier\RateLimitModifierInterface;
 use Doctrine\Common\Annotations\AnnotationReader;
@@ -17,9 +17,9 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Event\ControllerEvent;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
 
-class ReadGraphQLRateLmitAnnotationListenerTest extends TestCase
+class ReadGraphQLRateLimitAnnotationListenerTest extends TestCase
 {
-    private ReadGraphQLRateLmitAnnotationListener $readRateLimitAnnotationListener;
+    private ReadGraphQLRateLimitAnnotationListener $readRateLimitAnnotationListener;
     /** @var AnnotationReader|MockObject */
     private $annotationReader;
     /** @var array<RateLimitModifierInterface|MockObject> */
@@ -31,7 +31,7 @@ class ReadGraphQLRateLmitAnnotationListenerTest extends TestCase
 
     public function createGraphQLReadRateLimitAnnotationListener(): void
     {
-        $this->readRateLimitAnnotationListener = new ReadGraphQLRateLmitAnnotationListener(
+        $this->readRateLimitAnnotationListener = new ReadGraphQLRateLimitAnnotationListener(
             $this->container = $this->createMock(ContainerInterface::class),
             $this->annotationReader = $this->createMock(AnnotationReader::class),
             $this->rateLimitModifiers = [

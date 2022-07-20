@@ -13,7 +13,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\ControllerEvent;
 
-class ReadGraphQLRateLmitAnnotationListener implements EventSubscriberInterface
+class ReadGraphQLRateLimitAnnotationListener implements EventSubscriberInterface
 {
     /** @var iterable<RateLimitModifierInterface> */
     private readonly iterable $rateLimitModifiers;
