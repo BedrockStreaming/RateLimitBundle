@@ -21,7 +21,7 @@ class RequestAttributeRateLimitModifier implements RateLimitModifierInterface
 
     public function modifyRateLimit(Request $request, RateLimit $rateLimit): void
     {
-        /** @var string */
+        /** @var string $route */
         $route = $request->attributes->get($this->attributeName);
         $rateLimit->varyHashOn($this->attributeName, $route);
     }

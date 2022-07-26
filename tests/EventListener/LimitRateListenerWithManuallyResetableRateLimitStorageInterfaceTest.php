@@ -26,7 +26,7 @@ class LimitRateListenerWithManuallyResetableRateLimitStorageInterfaceTest extend
     public function testItResetsAndStoresNewRateLimitIfCurrentOneIsOutdated(): void
     {
         $event = $this->createEventWithRateLimitInRequest();
-        /** @var RateLimit */
+        /** @var RateLimit $rateLimit */
         $rateLimit = $event->getRequest()->attributes->get('_rate_limit');
 
         $this->storage->expects($this->once())

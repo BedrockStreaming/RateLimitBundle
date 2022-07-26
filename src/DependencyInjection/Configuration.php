@@ -13,7 +13,7 @@ class Configuration implements ConfigurationInterface
     public function getConfigTreeBuilder(): TreeBuilder
     {
         $treeBuilder = new TreeBuilder('bedrock_rate_limit');
-        /** @var ArrayNodeDefinition $rootNode */
+        /** @var ArrayNodeDefinition $rootNode $rootNode */
         $rootNode = $treeBuilder->getRootNode();
 
         $rootNode
