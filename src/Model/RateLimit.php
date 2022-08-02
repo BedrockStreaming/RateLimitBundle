@@ -8,17 +8,12 @@ class RateLimit
 {
     /** @var array<string> */
     private array $vary = [];
-    private readonly int $limit;
-    private readonly int $period;
 
-    public function __construct(int $limit, int $period)
+    public function __construct(private readonly int $limit, private readonly int $period)
     {
         if ($limit < 0 || $period < 0) {
             throw new \InvalidArgumentException('Limit and period must be > 0');
         }
-
-        $this->limit = $limit;
-        $this->period = $period;
     }
 
     public function getLimit(): int
