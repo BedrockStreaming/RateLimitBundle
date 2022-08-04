@@ -15,20 +15,29 @@ use Symfony\Component\HttpKernel\Event\ControllerEvent;
 
 class ReadGraphQLRateLimitAnnotationListener implements EventSubscriberInterface
 {
-    /** @var iterable<RateLimitModifierInterface> */
-    private readonly iterable $rateLimitModifiers;
+    private Reader $annotationReader;
+
+    private iterable $rateLimitModifiers;
+    private int $limit;
+    private int $period;
+    private ContainerInterface $container;
 
     /**
      * @param RateLimitModifierInterface[] $rateLimitModifiers
      */
-    public function __construct(private readonly ContainerInterface $container, private readonly Reader $annotationReader, iterable $rateLimitModifiers, private readonly int $limit, private readonly int $period)
+    public function __construct(ContainerInterface $container, Reader $annotationReader, iterable $rateLimitModifiers, int $limit, int $period)
     {
         foreach ($rateLimitModifiers as $rateLimitModifier) {
             if (!($rateLimitModifier instanceof RateLimitModifierInterface)) {
                 throw new \InvalidArgumentException('$rateLimitModifiers must be instance of '.RateLimitModifierInterface::class);
             }
         }
+
+        $this->annotationReader = $annotationReader;
         $this->rateLimitModifiers = $rateLimitModifiers;
+        $this->limit = $limit;
+        $this->period = $period;
+        $this->container = $container;
     }
 
     public function onKernelController(ControllerEvent $event): void

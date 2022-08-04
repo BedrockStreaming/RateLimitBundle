@@ -4,8 +4,17 @@ namespace Bedrock\Bundle\RateLimitBundle\Model;
 
 class GraphQLEndpointConfiguration
 {
-    public function __construct(private readonly ?int $limit, private readonly ?int $period, private readonly string $endpoint)
+    private ?int $limit;
+
+    private ?int $period;
+
+    private string $endpoint;
+
+    public function __construct(?int $limit, ?int $period, string $endpoint)
     {
+        $this->limit = $limit;
+        $this->period = $period;
+        $this->endpoint = $endpoint;
     }
 
     public function getEndpoint(): string

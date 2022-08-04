@@ -14,8 +14,13 @@ use Symfony\Component\HttpKernel\Event\ControllerArgumentsEvent;
 
 class LimitRateListener implements EventSubscriberInterface
 {
-    public function __construct(private readonly RateLimitStorageInterface $storage, private readonly bool $displayHeaders)
+    private RateLimitStorageInterface $storage;
+    private bool $displayHeaders;
+
+    public function __construct(RateLimitStorageInterface $storage, bool $displayHeaders)
     {
+        $this->storage = $storage;
+        $this->displayHeaders = $displayHeaders;
     }
 
     public function onKernelController(ControllerArgumentsEvent $event): void

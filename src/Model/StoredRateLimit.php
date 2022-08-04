@@ -6,8 +6,15 @@ namespace Bedrock\Bundle\RateLimitBundle\Model;
 
 class StoredRateLimit
 {
-    public function __construct(private readonly RateLimit $rateLimit, private int $hits, private readonly \DateTimeImmutable $validUntil)
+    private RateLimit $rateLimit;
+    private int $hits;
+    private \DateTimeImmutable $validUntil;
+
+    public function __construct(RateLimit $rateLimit, int $hits, \DateTimeImmutable $validUntil)
     {
+        $this->rateLimit = $rateLimit;
+        $this->hits = $hits;
+        $this->validUntil = $validUntil;
     }
 
     public function getHash(): string

@@ -10,8 +10,11 @@ use Symfony\Component\HttpKernel\Event\ResponseEvent;
 
 class AddRateLimitHeadersListener implements EventSubscriberInterface
 {
-    public function __construct(private readonly bool $displayHeaders)
+    private bool $displayHeaders;
+
+    public function __construct(bool $displayHeaders)
     {
+        $this->displayHeaders = $displayHeaders;
     }
 
     public function onKernelResponse(ResponseEvent $event): void
