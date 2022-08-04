@@ -31,7 +31,7 @@
         "m6web/php-cs-fixer-config": "^2.1",
         "phpstan/phpstan": "^1.5",
         "phpstan/phpstan-phpunit": "^1.1",
-        "symfony/var-dumper": "6.1.*"
+        "symfony/var-dumper": "^6.0"
     },
     "suggest": {
         "webonyx/graphql-php": "Needed to support @GraphQLRateLimit annotation"
