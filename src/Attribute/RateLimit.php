@@ -7,13 +7,8 @@ namespace Bedrock\Bundle\RateLimitBundle\Attribute;
 #[\Attribute(\Attribute::TARGET_METHOD)]
 final class RateLimit
 {
-    private ?int $limit;
-    private ?int $period;
-
-    public function __construct(?int $limit = null, ?int $period = null)
+    public function __construct(private ?int $limit = null, private ?int $period = null)
     {
-        $this->limit = $limit;
-        $this->period = $period;
     }
 
     public function getLimit(): ?int
