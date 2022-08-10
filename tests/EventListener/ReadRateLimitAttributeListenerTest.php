@@ -210,7 +210,7 @@ class FakeInvokableClassWithDefaultRateLimit
 
 class FakeClassWithRateLimit
 {
-    #[RateLimitAttribute(['limit' => 10, 'period' => 5])]
+    #[RateLimitAttribute(limit: 10, period: 5)]
     public function action(): void
     {
     }

@@ -14,9 +14,9 @@ final class GraphQLRateLimit
     private array $endpointConfigurations;
 
     /**
-     * @param array<string, mixed> $args
+     * @param array<array<string, string|int|null>> $endpoints
      */
-    public function __construct(array $args = [])
+    public function __construct(array $endpoints = [])
     {
         $optionResolver = (new OptionsResolver())->setDefault('endpoints', function (OptionsResolver $endpointResolver) {
             $endpointResolver->setPrototype(true)
@@ -30,7 +30,7 @@ final class GraphQLRateLimit
             ->setAllowedTypes('period', ['int', 'null']);
         });
 
-        $resolvedArgs = $optionResolver->resolve($args);
+        $resolvedArgs = $optionResolver->resolve(['endpoints' => $endpoints]);
 
         foreach ($resolvedArgs['endpoints'] as $endpoint) {
             $this->endpointConfigurations[] = new GraphQLEndpointConfiguration($endpoint['limit'], $endpoint['period'], $endpoint['endpoint']);

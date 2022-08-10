@@ -206,11 +206,11 @@ GRAPHQL;
 
 class FakeInvokableClassWithDefaultGraphQLRateLimit
 {
-    #[GraphQLRateLimitAttribute([
-        'endpoints' => [
+    #[GraphQLRateLimitAttribute(
+        endpoints: [
             ['endpoint' => 'GetObject'],
         ],
-    ])]
+    )]
     public function __invoke(): void
     {
     }
@@ -218,15 +218,15 @@ class FakeInvokableClassWithDefaultGraphQLRateLimit
 
 class FakeInvokableClassWithCustomGraphQLRateLimit
 {
-    #[GraphQLRateLimitAttribute([
-        'endpoints' => [
+    #[GraphQLRateLimitAttribute(
+        endpoints: [
             [
                 'endpoint' => 'GetObject',
                 'limit' => 10,
                 'period' => 5,
             ],
         ],
-    ])]
+    )]
     public function __invoke(): void
     {
     }

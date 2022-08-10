@@ -10,13 +10,10 @@ final class RateLimit
     private ?int $limit;
     private ?int $period;
 
-    /**
-     * @param array<string, int> $args
-     */
-    public function __construct(array $args = [])
+    public function __construct(?int $limit = null, ?int $period = null)
     {
-        $this->limit = $args['limit'] ?? null;
-        $this->period = $args['period'] ?? null;
+        $this->limit = $limit;
+        $this->period = $period;
     }
 
     public function getLimit(): ?int
