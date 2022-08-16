@@ -113,7 +113,7 @@ class ReadGraphQLRateLimitAttributeListenerTest extends TestCase
         );
     }
 
-    public function testIttDoesNotSetRateLimitIfGraphQLAttributeAndEndpointNotConfigured(): void
+    public function testItDoesNotSetRateLimitIfGraphQLAttributeAndEndpointNotConfigured(): void
     {
         $this->createGraphQLReadRateLimitAttributeListener();
         $request = $this->createMock(Request::class);
