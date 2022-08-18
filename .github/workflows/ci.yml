@@ -5,10 +5,14 @@ jobs:
     ci:
         name: Tests & Quality
         runs-on: ubuntu-latest
+        strategy:
+            matrix:
+                version: [ '8.0', '8.1' ]
+            fail-fast: false
         steps:
             - uses: actions/checkout@master
             - uses: shivammathur/setup-php@v2
               with:
-                  php-version: 7.4
+                  php-version: ${{ matrix.version }}
             - run: make install
             - run: make ci

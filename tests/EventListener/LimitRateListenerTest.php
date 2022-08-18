@@ -38,6 +38,7 @@ class LimitRateListenerTest extends BaseLimitRateListenerTest
     public function testItStoresRateLimitIfNoneIsStored(): void
     {
         $event = $this->createEventWithRateLimitInRequest();
+        /** @var RateLimit $rateLimit */
         $rateLimit = $event->getRequest()->attributes->get('_rate_limit');
 
         $this->storage->expects($this->once())
@@ -58,6 +59,7 @@ class LimitRateListenerTest extends BaseLimitRateListenerTest
     public function testItResetsAndStoresNewRateLimitIfCurrentOneIsOutdated(): void
     {
         $event = $this->createEventWithRateLimitInRequest();
+        /** @var RateLimit $rateLimit */
         $rateLimit = $event->getRequest()->attributes->get('_rate_limit');
 
         $this->storage->expects($this->once())
@@ -80,6 +82,7 @@ class LimitRateListenerTest extends BaseLimitRateListenerTest
     public function testItDecreasesLimitIfRateLimitIsValid(): void
     {
         $event = $this->createEventWithRateLimitInRequest();
+        /** @var RateLimit $rateLimit */
         $rateLimit = $event->getRequest()->attributes->get('_rate_limit');
 
         $this->storage->expects($this->once())
@@ -103,6 +106,7 @@ class LimitRateListenerTest extends BaseLimitRateListenerTest
     public function testItSetsABlockingResponseIfLimitIsReached(): void
     {
         $event = $this->createEventWithRateLimitInRequest();
+        /** @var RateLimit $rateLimit */
         $rateLimit = $event->getRequest()->attributes->get('_rate_limit');
 
         $this->storage
@@ -133,6 +137,7 @@ class LimitRateListenerTest extends BaseLimitRateListenerTest
     public function testItSetsABlockingResponseIfLimitIsExceeded(): void
     {
         $event = $this->createEventWithRateLimitInRequest();
+        /** @var RateLimit $rateLimit */
         $rateLimit = $event->getRequest()->attributes->get('_rate_limit');
 
         $this->storage->expects($this->once())->method('getStoredRateLimit')->willReturn(
