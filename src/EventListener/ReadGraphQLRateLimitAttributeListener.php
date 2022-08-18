@@ -2,10 +2,9 @@
 
 namespace Bedrock\Bundle\RateLimitBundle\EventListener;
 
-use Bedrock\Bundle\RateLimitBundle\Annotation\GraphQLRateLimit as GraphQLRateLimitAnnotation;
+use Bedrock\Bundle\RateLimitBundle\Attribute\GraphQLRateLimit as GraphQLRateLimitAttribute;
 use Bedrock\Bundle\RateLimitBundle\Model\RateLimit;
 use Bedrock\Bundle\RateLimitBundle\RateLimitModifier\RateLimitModifierInterface;
-use Doctrine\Common\Annotations\Reader;
 use GraphQL\Language\AST\OperationDefinitionNode;
 use GraphQL\Language\Parser;
 use GraphQL\Language\Source;
@@ -13,7 +12,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\ControllerEvent;
 
-class ReadGraphQLRateLimitAnnotationListener implements EventSubscriberInterface
+class ReadGraphQLRateLimitAttributeListener implements EventSubscriberInterface
 {
     /** @var iterable<RateLimitModifierInterface> */
     private iterable $rateLimitModifiers;
@@ -21,7 +20,7 @@ class ReadGraphQLRateLimitAnnotationListener implements EventSubscriberInterface
     /**
      * @param RateLimitModifierInterface[] $rateLimitModifiers
      */
-    public function __construct(private ContainerInterface $container, private Reader $annotationReader, iterable $rateLimitModifiers, private int $limit, private int $period)
+    public function __construct(private ContainerInterface $container, iterable $rateLimitModifiers, private int $limit, private int $period)
     {
         foreach ($rateLimitModifiers as $rateLimitModifier) {
             if (!($rateLimitModifier instanceof RateLimitModifierInterface)) {
@@ -51,19 +50,29 @@ class ReadGraphQLRateLimitAnnotationListener implements EventSubscriberInterface
             }
         }
         $reflection = new \ReflectionClass($controllerName);
-        $annotation = $this->annotationReader->getMethodAnnotation($reflection->getMethod((string) ($methodName ?? '__invoke')), GraphQLRateLimitAnnotation::class);
+        $attributes = $reflection->getMethod((string) ($methodName ?? '__invoke'))->getAttributes(GraphQLRateLimitAttribute::class);
 
-        if (!$annotation instanceof GraphQLRateLimitAnnotation) {
+        if (count($attributes) > 1) {
+            throw new \InvalidArgumentException('Unexpected value');
+        }
+
+        /** @var ?\ReflectionAttribute $attribute */
+        $attribute = array_shift($attributes);
+
+        if (null === $attribute) {
             return;
         }
 
+        /** @var GraphQLRateLimitAttribute $rateLimitAttribute */
+        $rateLimitAttribute = $attribute->newInstance();
+
         if (!class_exists(\GraphQL\Language\Parser::class)) {
-            throw new \Exception('Run "composer require webonyx/graphql-php" to use @GraphQLRateLimit annotation.');
+            throw new \Exception('Run "composer require webonyx/graphql-php" to use @GraphQLRateLimit attribute.');
         }
 
         $endpoint = $this->extractQueryName($request->request->get('query'));
 
-        foreach ($annotation->getEndpointConfigurations() as $graphQLEndpointConfiguration) {
+        foreach ($rateLimitAttribute->getEndpointConfigurations() as $graphQLEndpointConfiguration) {
             if ($endpoint === $graphQLEndpointConfiguration->getEndpoint()) {
                 $rateLimit = new RateLimit(
                     $graphQLEndpointConfiguration->getLimit() ?? $this->limit,

@@ -4,11 +4,10 @@ declare(strict_types=1);
 
 namespace Bedrock\Bundle\RateLimitBundle\Tests\EventListener;
 
-use Bedrock\Bundle\RateLimitBundle\Annotation\RateLimit as RateLimitAnnotation;
-use Bedrock\Bundle\RateLimitBundle\EventListener\ReadRateLimitAnnotationListener;
+use Bedrock\Bundle\RateLimitBundle\Attribute\RateLimit as RateLimitAttribute;
+use Bedrock\Bundle\RateLimitBundle\EventListener\ReadRateLimitAttributeListener;
 use Bedrock\Bundle\RateLimitBundle\Model\RateLimit;
 use Bedrock\Bundle\RateLimitBundle\RateLimitModifier\RateLimitModifierInterface;
-use Doctrine\Common\Annotations\AnnotationReader;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -17,15 +16,12 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Event\ControllerEvent;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
 
-class ReadRateLimitAnnotationListenerTest extends TestCase
+class ReadRateLimitAttributeListenerTest extends TestCase
 {
-    private ReadRateLimitAnnotationListener $readRateLimitAnnotationListener;
-
-    /** @var AnnotationReader|MockObject */
-    private $annotationReader;
+    private ReadRateLimitAttributeListener $readRateLimitAttributeListener;
 
     /** @var array<RateLimitModifierInterface|MockObject> */
-    private $rateLimitModifiers;
+    private array $rateLimitModifiers;
 
     private int $limitDefaultValue = 1000;
 
@@ -34,11 +30,10 @@ class ReadRateLimitAnnotationListenerTest extends TestCase
     /** @var MockObject|ContainerInterface */
     private $container;
 
-    public function createReadRateLimitAnnotationListener(bool $defaultLimitByRouteValue = false): void
+    public function createReadRateLimitAttributeListener(bool $defaultLimitByRouteValue = false): void
     {
-        $this->readRateLimitAnnotationListener = new ReadRateLimitAnnotationListener(
+        $this->readRateLimitAttributeListener = new ReadRateLimitAttributeListener(
             $this->container = $this->createMock(ContainerInterface::class),
-            $this->annotationReader = $this->createMock(AnnotationReader::class),
             $this->rateLimitModifiers = [
                 $this->createMock(RateLimitModifierInterface::class),
                 $this->createMock(RateLimitModifierInterface::class),
@@ -49,42 +44,38 @@ class ReadRateLimitAnnotationListenerTest extends TestCase
         );
     }
 
-    public function testItDoesNotSetRateLimitIfNoAnnotationProvided(): void
+    public function testItDoesNotSetRateLimitIfNoAttributeProvided(): void
     {
-        $this->createReadRateLimitAnnotationListener();
-        $event = $this->createEvent();
+        $this->createReadRateLimitAttributeListener();
+        $event = $this->createEvent(null, FakeInvokableClassWithoutRateLimit::class);
 
         $this->container->expects($this->never())
             ->method('has');
 
-        $this->annotationReader->expects($this->once())->method('getMethodAnnotation')->willReturn(null);
-
         $this->rateLimitModifiers[0]->expects($this->never())->method('support');
         $this->rateLimitModifiers[1]->expects($this->never())->method('support');
 
-        $this->readRateLimitAnnotationListener->onKernelController($event);
+        $this->readRateLimitAttributeListener->onKernelController($event);
         $this->assertFalse($event->getRequest()->attributes->has('_rate_limit'));
     }
 
     /**
      * @dataProvider servicesAliasDataProvider
      */
-    public function testItSetRateLimitIfNoAnnotationProvidedAndServiceAliasIsUsed(string $serviceAlias): void
+    public function testItSetRateLimitIfNoAttributeProvidedAndServiceAliasIsUsed(string $serviceAlias): void
     {
-        $this->createReadRateLimitAnnotationListener();
+        $this->createReadRateLimitAttributeListener();
 
         $this->container->expects($this->once())
             ->method('get')
-            ->willReturn(new FakeInvokableClassWithDefaultRateLimit());
+            ->willReturn(new FakeInvokableClassWithoutRateLimit());
 
         $event = $this->createEvent(null, $serviceAlias);
-
-        $this->annotationReader->expects($this->once())->method('getMethodAnnotation')->willReturn(null);
 
         $this->rateLimitModifiers[0]->expects($this->never())->method('support');
         $this->rateLimitModifiers[1]->expects($this->never())->method('support');
 
-        $this->readRateLimitAnnotationListener->onKernelController($event);
+        $this->readRateLimitAttributeListener->onKernelController($event);
         $this->assertFalse($event->getRequest()->attributes->has('_rate_limit'));
     }
 
@@ -101,17 +92,15 @@ class ReadRateLimitAnnotationListenerTest extends TestCase
         ];
     }
 
-    public function testItSetsRateLimitIfAnnotationProvidedWithDefaultValue(): void
+    public function testItSetsRateLimitIfAttributeProvidedWithDefaultValue(): void
     {
-        $this->createReadRateLimitAnnotationListener();
+        $this->createReadRateLimitAttributeListener();
         $request = $this->createMock(Request::class);
         $request->attributes = new ParameterBag();
         $event = $this->createEvent($request);
 
         $this->container->expects($this->never())
             ->method('has');
-
-        $this->annotationReader->expects($this->once())->method('getMethodAnnotation')->willReturn(new RateLimitAnnotation());
 
         $this->rateLimitModifiers[0]->expects($this->once())->method('support')->willReturn(true);
         $rateLimit = new RateLimit($this->limitDefaultValue, $this->periodDefaultValue);
@@ -120,7 +109,7 @@ class ReadRateLimitAnnotationListenerTest extends TestCase
         $this->rateLimitModifiers[1]->expects($this->once())->method('support')->willReturn(false);
         $this->rateLimitModifiers[1]->expects($this->never())->method('modifyRateLimit');
 
-        $this->readRateLimitAnnotationListener->onKernelController($event);
+        $this->readRateLimitAttributeListener->onKernelController($event);
         $this->assertTrue($event->getRequest()->attributes->has('_rate_limit'));
 
         $this->assertEquals(
@@ -132,18 +121,16 @@ class ReadRateLimitAnnotationListenerTest extends TestCase
     /**
      * @dataProvider rateLimitConfigurationDataProvider
      */
-    public function testItSetsRateLimitIfAnnotationProvidedWithCustomValue(bool $isLimitByRouteEnbaled): void
+    public function testItSetsRateLimitIfAttributeProvidedWithCustomValue(bool $isLimitByRouteEnbaled): void
     {
-        $this->createReadRateLimitAnnotationListener($isLimitByRouteEnbaled);
+        $this->createReadRateLimitAttributeListener($isLimitByRouteEnbaled);
 
         $request = $this->createMock(Request::class);
         $request->attributes = new ParameterBag(['_route' => 'a-random-route']);
-        $event = $this->createEventWithAnnotation($request);
+        $event = $this->createEventWithAttribute($request);
 
         $this->container->expects($this->never())
             ->method('has');
-
-        $this->annotationReader->expects($this->once())->method('getMethodAnnotation')->willReturn(new RateLimitAnnotation(['limit' => 10, 'period' => 5]));
 
         $this->rateLimitModifiers[0]->expects($this->once())->method('support')->willReturn(true);
         if ($isLimitByRouteEnbaled) {
@@ -157,7 +144,7 @@ class ReadRateLimitAnnotationListenerTest extends TestCase
         $this->rateLimitModifiers[1]->expects($this->once())->method('support')->willReturn(false);
         $this->rateLimitModifiers[1]->expects($this->never())->method('modifyRateLimit');
 
-        $this->readRateLimitAnnotationListener->onKernelController($event);
+        $this->readRateLimitAttributeListener->onKernelController($event);
         $this->assertTrue($event->getRequest()->attributes->has('_rate_limit'));
 
         $this->assertEquals(
@@ -193,7 +180,7 @@ class ReadRateLimitAnnotationListenerTest extends TestCase
         );
     }
 
-    public function createEventWithAnnotation(Request $request): ControllerEvent
+    public function createEventWithAttribute(Request $request): ControllerEvent
     {
         $request->attributes->set('_controller', FakeClassWithRateLimit::class.'::action');
 
@@ -206,11 +193,16 @@ class ReadRateLimitAnnotationListenerTest extends TestCase
     }
 }
 
+class FakeInvokableClassWithoutRateLimit
+{
+    public function __invoke(): void
+    {
+    }
+}
+
 class FakeInvokableClassWithDefaultRateLimit
 {
-    /**
-     * @RateLimit()
-     */
+    #[RateLimitAttribute]
     public function __invoke(): void
     {
     }
@@ -218,12 +210,7 @@ class FakeInvokableClassWithDefaultRateLimit
 
 class FakeClassWithRateLimit
 {
-    /**
-     * @RateLimit(
-     *     limit=10,
-     *     period=5
-     * )
-     */
+    #[RateLimitAttribute(limit: 10, period: 5)]
     public function action(): void
     {
     }

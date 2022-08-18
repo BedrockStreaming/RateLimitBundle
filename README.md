@@ -26,12 +26,12 @@ bedrock_rate_limit:
     limit_by_route: true|false # false by default
     display_headers: true|false # false by default
 ```
-By default, the limitation is common to all routes annotated `@RateLimit()`. 
-For example, if you keep the default configuration and you configure the `@RateLimit()` annotation in 2 routes. Limit will shared between this 2 routes, if user consume all authorized calls on the first route, the second route couldn't be called.
+By default, the limitation is common to all routes annotated `#[RateLimit]`. 
+For example, if you keep the default configuration and you configure the `#[RateLimit]` attribute in 2 routes. Limit will shared between this 2 routes, if user consume all authorized calls on the first route, the second route couldn't be called.
 If you swicth `limit_by_route` to true, users will be allowed to reach the limit on each route annotated.
 
-`@GraphQLRateLimit()`annotation allows you to rate limit by graphQL query or mutation.
-/!\ To use this annotation, you will need to install suggested package.
+`#[GraphQLRateLimit]`attribute allows you to rate limit by graphQL query or mutation.
+/!\ To use this attribute, you will need to install suggested package.
 
 If you switch `display_headers` to true, 3 headers will be added `x-rate-limit`, `x-rate-limit-hits`, `x-rate-limit-untils` to your responses. This can be usefull to debug your limitations.
 `display_headers` is used to display a verbose return if limit is reached.
@@ -76,33 +76,26 @@ You can also create your own rate limit modifier by implementing `RateLimitModif
 
 ### Configure your routes
 
-#### With annotations
+#### With attribute
 
-Add the `@RateLimit()` annotation to your controller methods (by default, the limit will be 1000 requests per minute).
-This annotation accepts parameters to customize the rate limit. The following example shows how to limit requests on a route at the rate of 10 requests max every 2 minutes.
+Add the `#[RateLimit]` attribute to your controller methods (by default, the limit will be 1000 requests per minute).
+This attribute accepts parameters to customize the rate limit. The following example shows how to limit requests on a route at the rate of 10 requests max every 2 minutes.
 :warning: This customization only works if the `limit_by_route` parameter is `true`
 
 ```php
-/**
-* @RateLimit(
-*     limit=10,
-*     period=120
-* )
-*/
+#[RateLimit(limit: 10, period: 120)]
 ```
 
-To rate limit your graphQL API, add the `@GraphQLRateLimit()` annotation to your graphQL controller.
-This annotation requires a list of endpoints and accepts parameters to customize the rate limit. The following example shows how to limit requests on an endpoint at the rate of 10 requests max every 2 minutes and on default limitations.
+To rate limit your graphQL API, add the `#[GraphQlRateLimit]` attribute to your graphQL controller.
+This attribute requires a list of endpoints and accepts parameters to customize the rate limit. The following example shows how to limit requests on an endpoint at the rate of 10 requests max every 2 minutes and on default limitations.
 
 ```php
-/**
-* @GraphQLRateLimit(
-*     endpoints={
-*        {"endpoint"="GetMyQuery", "limit"=10, "period"=120},
-*        {"endpoint"="EditMyMutation"},
-*     }
-* )
-*/
+#[GraphQlRateLimit(
+    endpoints: [
+        [ 'endpoint' => 'GetMyQuery', 'limit' => 10, 'period' => 12],
+        [ 'endpoint' => 'EditMyMutation'],
+    ]
+)]
 ```
 
 #### In YAML
@@ -121,4 +114,24 @@ bedrock_rate_limit:
             period: 10
         post_foobar:
             period: 10
+```
+
+#### Migration to php8
+
+If you use rector you can use those rules to automatically migrate annotation to attributes :
+
+```php
+$rectorConfig->ruleWithConfiguration(
+    \Rector\Php80\Rector\Class_\AnnotationToAttributeRector::class,
+    [
+        new \Rector\Php80\ValueObject\AnnotationToAttribute(
+        'Bedrock\Bundle\RateLimitBundle\Annotation\GraphQLRateLimit',
+        \Bedrock\Bundle\RateLimitBundle\Attribute\GraphQLRateLimit::class
+        ),
+        new \Rector\Php80\ValueObject\AnnotationToAttribute(
+            'Bedrock\Bundle\RateLimitBundle\Annotation\RateLimit',
+            \Bedrock\Bundle\RateLimitBundle\Attribute\RateLimit::class
+        )
+    ],
+);
 ```

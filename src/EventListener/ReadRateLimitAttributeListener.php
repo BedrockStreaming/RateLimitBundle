@@ -4,15 +4,14 @@ declare(strict_types=1);
 
 namespace Bedrock\Bundle\RateLimitBundle\EventListener;
 
-use Bedrock\Bundle\RateLimitBundle\Annotation\RateLimit as RateLimitAnnotation;
+use Bedrock\Bundle\RateLimitBundle\Attribute\RateLimit as RateLimitAttribute;
 use Bedrock\Bundle\RateLimitBundle\Model\RateLimit;
 use Bedrock\Bundle\RateLimitBundle\RateLimitModifier\RateLimitModifierInterface;
-use Doctrine\Common\Annotations\Reader;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\ControllerEvent;
 
-class ReadRateLimitAnnotationListener implements EventSubscriberInterface
+class ReadRateLimitAttributeListener implements EventSubscriberInterface
 {
     /** @var iterable<RateLimitModifierInterface> */
     private iterable $rateLimitModifiers;
@@ -20,7 +19,7 @@ class ReadRateLimitAnnotationListener implements EventSubscriberInterface
     /**
      * @param RateLimitModifierInterface[] $rateLimitModifiers
      */
-    public function __construct(private ContainerInterface $container, private Reader $annotationReader, iterable $rateLimitModifiers, private int $limit, private int $period, private bool $limitByRoute)
+    public function __construct(private ContainerInterface $container, iterable $rateLimitModifiers, private int $limit, private int $period, private bool $limitByRoute)
     {
         foreach ($rateLimitModifiers as $rateLimitModifier) {
             if (!($rateLimitModifier instanceof RateLimitModifierInterface)) {
@@ -50,11 +49,21 @@ class ReadRateLimitAnnotationListener implements EventSubscriberInterface
             }
         }
         $reflection = new \ReflectionClass($controllerName);
-        $annotation = $this->annotationReader->getMethodAnnotation($reflection->getMethod((string) ($methodName ?? '__invoke')), RateLimitAnnotation::class);
+        $attributes = $reflection->getMethod((string) ($methodName ?? '__invoke'))->getAttributes(RateLimitAttribute::class);
 
-        if (!$annotation instanceof RateLimitAnnotation) {
+        if (count($attributes) > 1) {
+            throw new \InvalidArgumentException('Unexpected value');
+        }
+
+        /** @var ?\ReflectionAttribute $attribute */
+        $attribute = array_shift($attributes);
+
+        if (null === $attribute) {
             return;
         }
+
+        /** @var RateLimitAttribute $rateLimitAttribute */
+        $rateLimitAttribute = $attribute->newInstance();
 
         $rateLimit = new RateLimit(
             $this->limit,
@@ -63,8 +72,8 @@ class ReadRateLimitAnnotationListener implements EventSubscriberInterface
 
         if ($this->limitByRoute) {
             $rateLimit = new RateLimit(
-                $annotation->getLimit() ?? $this->limit,
-                $annotation->getPeriod() ?? $this->period
+                $rateLimitAttribute->getLimit() ?? $this->limit,
+                $rateLimitAttribute->getPeriod() ?? $this->period
             );
 
             /** @var string $route */

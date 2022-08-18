@@ -2,24 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Bedrock\Bundle\RateLimitBundle\Annotation;
+namespace Bedrock\Bundle\RateLimitBundle\Attribute;
 
-/**
- * @Annotation
- * @Target({"METHOD"})
- */
+#[\Attribute(\Attribute::TARGET_METHOD)]
 final class RateLimit
 {
-    private ?int $limit;
-    private ?int $period;
-
-    /**
-     * @param array<string, int> $args
-     */
-    public function __construct(array $args = [])
+    public function __construct(private ?int $limit = null, private ?int $period = null)
     {
-        $this->limit = $args['limit'] ?? null;
-        $this->period = $args['period'] ?? null;
     }
 
     public function getLimit(): ?int

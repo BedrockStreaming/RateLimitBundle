@@ -6,7 +6,7 @@ services:
   Bedrock\Bundle\RateLimitBundle\:
     resource: '../../../src/*'
 
-  Bedrock\Bundle\RateLimitBundle\EventListener\ReadRateLimitAnnotationListener:
+  Bedrock\Bundle\RateLimitBundle\EventListener\ReadRateLimitAttributeListener:
     arguments:
       $limit: '%bedrock_rate_limit.limit%'
       $period: '%bedrock_rate_limit.period%'
@@ -20,7 +20,7 @@ services:
       $rateLimitModifiers: !tagged rate_limit.modifiers
       $routes: '%bedrock_rate_limit.routes%'
 
-  Bedrock\Bundle\RateLimitBundle\EventListener\ReadGraphQLRateLimitAnnotationListener:
+  Bedrock\Bundle\RateLimitBundle\EventListener\ReadGraphQLRateLimitAttributeListener:
     arguments:
       $limit: '%bedrock_rate_limit.limit%'
       $period: '%bedrock_rate_limit.period%'
