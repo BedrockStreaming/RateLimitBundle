@@ -46,7 +46,7 @@ class RateLimit
             throw new \InvalidArgumentException('Cannot compute rate limit discriminator with an empty vary.');
         }
 
-        return (string) json_encode($this->vary);
+        return (string) json_encode($this->vary, JSON_THROW_ON_ERROR);
     }
 
     /**

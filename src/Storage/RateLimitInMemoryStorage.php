@@ -10,7 +10,7 @@ use Bedrock\Bundle\RateLimitBundle\Model\StoredRateLimit;
 class RateLimitInMemoryStorage implements ManuallyResetableRateLimitStorageInterface
 {
     /** @var array<string, StoredRateLimit> */
-    private static $storedRateLimits = [];
+    private static array $storedRateLimits = [];
 
     public function getStoredRateLimit(RateLimit $rateLimit): ?StoredRateLimit
     {

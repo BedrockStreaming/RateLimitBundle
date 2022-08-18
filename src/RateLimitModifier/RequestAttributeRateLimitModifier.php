@@ -7,11 +7,8 @@ use Symfony\Component\HttpFoundation\Request;
 
 class RequestAttributeRateLimitModifier implements RateLimitModifierInterface
 {
-    private string $attributeName;
-
-    public function __construct(string $attributeName)
+    public function __construct(private string $attributeName)
     {
-        $this->attributeName = $attributeName;
     }
 
     public function support(Request $request): bool

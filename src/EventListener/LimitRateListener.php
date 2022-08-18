@@ -14,13 +14,8 @@ use Symfony\Component\HttpKernel\Event\ControllerArgumentsEvent;
 
 class LimitRateListener implements EventSubscriberInterface
 {
-    private RateLimitStorageInterface $storage;
-    private bool $displayHeaders;
-
-    public function __construct(RateLimitStorageInterface $storage, bool $displayHeaders)
+    public function __construct(private RateLimitStorageInterface $storage, private bool $displayHeaders)
     {
-        $this->storage = $storage;
-        $this->displayHeaders = $displayHeaders;
     }
 
     public function onKernelController(ControllerArgumentsEvent $event): void
@@ -38,7 +33,7 @@ class LimitRateListener implements EventSubscriberInterface
         $rateLimit = $request->attributes->get('_rate_limit');
 
         if (!$rateLimit instanceof RateLimit) {
-            throw new \InvalidArgumentException(sprintf('Request attribute "_rate_limit" should be of type "%s". "%s" given.', RateLimit::class, \is_object($rateLimit) ? \get_class($rateLimit) : \gettype($rateLimit)));
+            throw new \InvalidArgumentException(sprintf('Request attribute "_rate_limit" should be of type "%s". "%s" given.', RateLimit::class, get_debug_type($rateLimit)));
         }
 
         $storedRateLimit = $this->storage->getStoredRateLimit($rateLimit);
@@ -55,12 +50,10 @@ class LimitRateListener implements EventSubscriberInterface
         if (null !== $storedRateLimit && $storedRateLimit->getHits() >= $rateLimit->getLimit()) {
             $displayHeaders = $this->displayHeaders;
             $event->setController(
-                static function () use ($displayHeaders, $storedRateLimit) {
-                    return new JsonResponse(
-                        $displayHeaders ? $storedRateLimit->getLimitReachedOutput() : Response::$statusTexts[Response::HTTP_TOO_MANY_REQUESTS],
-                        Response::HTTP_TOO_MANY_REQUESTS
-                    );
-                }
+                static fn () => new JsonResponse(
+                    $displayHeaders ? $storedRateLimit->getLimitReachedOutput() : Response::$statusTexts[Response::HTTP_TOO_MANY_REQUESTS],
+                    Response::HTTP_TOO_MANY_REQUESTS
+                )
             );
         }
 

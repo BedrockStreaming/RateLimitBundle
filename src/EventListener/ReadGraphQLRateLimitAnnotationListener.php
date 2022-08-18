@@ -13,31 +13,22 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\ControllerEvent;
 
-class ReadGraphQLRateLmitAnnotationListener implements EventSubscriberInterface
+class ReadGraphQLRateLimitAnnotationListener implements EventSubscriberInterface
 {
-    private Reader $annotationReader;
     /** @var iterable<RateLimitModifierInterface> */
-    private $rateLimitModifiers;
-    private int $limit;
-    private int $period;
-    private ContainerInterface $container;
+    private iterable $rateLimitModifiers;
 
     /**
      * @param RateLimitModifierInterface[] $rateLimitModifiers
      */
-    public function __construct(ContainerInterface $container, Reader $annotationReader, iterable $rateLimitModifiers, int $limit, int $period)
+    public function __construct(private ContainerInterface $container, private Reader $annotationReader, iterable $rateLimitModifiers, private int $limit, private int $period)
     {
         foreach ($rateLimitModifiers as $rateLimitModifier) {
             if (!($rateLimitModifier instanceof RateLimitModifierInterface)) {
                 throw new \InvalidArgumentException('$rateLimitModifiers must be instance of '.RateLimitModifierInterface::class);
             }
         }
-
-        $this->annotationReader = $annotationReader;
         $this->rateLimitModifiers = $rateLimitModifiers;
-        $this->limit = $limit;
-        $this->period = $period;
-        $this->container = $container;
     }
 
     public function onKernelController(ControllerEvent $event): void
@@ -66,7 +57,7 @@ class ReadGraphQLRateLmitAnnotationListener implements EventSubscriberInterface
             return;
         }
 
-        if (!class_exists('GraphQL\Language\Parser')) {
+        if (!class_exists(\GraphQL\Language\Parser::class)) {
             throw new \Exception('Run "composer require webonyx/graphql-php" to use @GraphQLRateLimit annotation.');
         }
 
